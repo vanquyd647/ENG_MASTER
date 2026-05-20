@@ -703,11 +703,6 @@ export default function App() {
                 isSyncing={isSyncing}
                 onViewStats={() => setCurrentView('stats')}
               />
-              <div className="flex justify-center pt-10 border-t border-zinc-800/50">
-                <Button onClick={seedVocabulary} variant="ghost" className="text-[10px] text-zinc-600 font-black tracking-[0.2em] uppercase hover:text-indigo-400">
-                  DEVELOPER: SEED VOCABULARY DATA
-                </Button>
-              </div>
             </div>
           )}
           {currentView === 'browse' && (
