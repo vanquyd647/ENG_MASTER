@@ -7,6 +7,7 @@ import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { 
   GoogleAuthProvider, 
   signInWithPopup, 
+  reauthenticateWithPopup,
   onAuthStateChanged, 
   User, 
   signOut
@@ -77,6 +78,7 @@ interface UserProgress {
 }
 
 export type AppSessionType = 'review' | 'quiz';
+type SyncAction = 'tasks' | 'calendar' | 'drive';
 
 export interface StudySessionLog {
   id: string;
@@ -94,6 +96,7 @@ interface UserProfile {
   totalWordsLearned: number;
   studyTimeMinutes: number;
   streak: number;
+  dailyGoal?: number;
   lastStudyDate?: string;
   history?: StudySessionLog[];
 }
@@ -180,8 +183,49 @@ const Card = ({ children, className, id, onClick }: { children: React.ReactNode;
 
 // --- Main App ---
 
-// Workspace Auth State (In-memory token caching)
-let cachedAccessToken: string | null = null;
+const createGoogleProvider = () => {
+  const provider = new GoogleAuthProvider();
+  provider.addScope('https://www.googleapis.com/auth/tasks');
+  provider.addScope('https://www.googleapis.com/auth/drive.file');
+  provider.addScope('https://www.googleapis.com/auth/calendar.events');
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return provider;
+};
+
+const getApiErrorMessage = async (res: Response) => {
+  try {
+    const data = await res.json();
+    return data?.error || data?.message || `${res.status} ${res.statusText}`;
+  } catch {
+    return `${res.status} ${res.statusText}`;
+  }
+};
+
+let studyReminderTimer: number | null = null;
+
+const scheduleStudyReminder = () => {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (studyReminderTimer) window.clearTimeout(studyReminderTimer);
+
+  const nextReminder = new Date();
+  nextReminder.setHours(20, 0, 0, 0);
+  if (nextReminder.getTime() <= Date.now()) {
+    nextReminder.setDate(nextReminder.getDate() + 1);
+  }
+
+  studyReminderTimer = window.setTimeout(() => {
+    new Notification('TOEIC Master', {
+      body: 'Đến giờ ôn lại kế hoạch từ vựng hôm nay.',
+      icon: '/favicon.ico',
+    });
+    scheduleStudyReminder();
+  }, nextReminder.getTime() - Date.now());
+};
+
+const clearStudyReminder = () => {
+  if (studyReminderTimer) window.clearTimeout(studyReminderTimer);
+  studyReminderTimer = null;
+};
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -192,7 +236,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [explainingWord, setExplainingWord] = useState<{ word: string; meaning: string; content: string } | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncingAction, setSyncingAction] = useState<SyncAction | null>(null);
 
   // --- Auth & Data Fetching ---
   useEffect(() => {
@@ -236,6 +280,7 @@ export default function App() {
           totalWordsLearned: 0,
           studyTimeMinutes: 0,
           streak: 1,
+          dailyGoal: 15,
         };
         await setDoc(profileRef, newProfile);
         setProfile(newProfile);
@@ -260,16 +305,7 @@ export default function App() {
 
   const login = async () => {
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('https://www.googleapis.com/auth/tasks');
-      provider.addScope('https://www.googleapis.com/auth/drive.file');
-      provider.addScope('https://www.googleapis.com/auth/calendar.events');
-      
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      if (credential?.accessToken) {
-        cachedAccessToken = credential.accessToken;
-      }
+      await signInWithPopup(auth, createGoogleProvider());
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.code === 'auth/configuration-not-found') {
@@ -291,6 +327,7 @@ export default function App() {
       totalWordsLearned: 0,
       studyTimeMinutes: 0,
       streak: 1,
+      dailyGoal: 15,
     };
     setIsGuest(true);
     setProfile(guestProfile);
@@ -304,7 +341,6 @@ export default function App() {
   };
 
   const logout = () => {
-    cachedAccessToken = null;
     if (isGuest) {
       setIsGuest(false);
       localStorage.removeItem('guest_profile');
@@ -317,15 +353,36 @@ export default function App() {
   };
 
   // --- Google Workspace Services ---
-  const getAuthToken = async () => {
-    if (cachedAccessToken) return cachedAccessToken;
-    // If token is missing but user is logged in, we might need a re-auth or fresh popup
-    // For simplicity in this preview, we'll try to re-trigger login if missing
-    if (!isGuest && user) {
-      toast.error('Token expired. Please login again.');
-      logout();
+  const getGoogleAccessToken = async () => {
+    if (isGuest || !user) {
+      toast.error('Cần đăng nhập Google để sử dụng tính năng này.');
+      return null;
     }
-    return null;
+
+    const result = await reauthenticateWithPopup(user, createGoogleProvider());
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const accessToken = credential?.accessToken || null;
+
+    if (!accessToken) {
+      toast.error('Không thể lấy quyền Google Workspace. Vui lòng thử lại.');
+    }
+
+    return accessToken;
+  };
+
+  const googleFetch = async (url: string, init: RequestInit = {}, retry = true): Promise<Response> => {
+    const token = await getGoogleAccessToken();
+    if (!token) throw new Error('Missing Google access token');
+
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    const res = await fetch(url, { ...init, headers });
+
+    if ((res.status === 401 || res.status === 403) && retry) {
+      return googleFetch(url, init, false);
+    }
+
+    return res;
   };
 
   const syncToGoogleCalendar = async () => {
@@ -336,10 +393,7 @@ export default function App() {
     
     if (!window.confirm("Thêm lịch ôn tập vào Google Calendar của bạn?")) return;
 
-    const token = await getAuthToken();
-    if (!token) return;
-
-    setIsSyncing(true);
+    setSyncingAction('calendar');
     const toastId = toast.loading('Đang lên lịch trên Google Calendar...');
 
     try {
@@ -359,23 +413,22 @@ export default function App() {
         }
       };
 
-      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      const res = await googleFetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(event)
       });
 
-      if (!res.ok) throw new Error('Calendar event creation failed');
+      if (!res.ok) throw new Error(await getApiErrorMessage(res));
       
       toast.success('Đã lên lịch học trên Google Calendar!', { id: toastId });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast.error('Lỗi khi đồng bộ Calendar', { id: toastId });
     } finally {
-      setIsSyncing(false);
+      setSyncingAction(null);
     }
   };
 
@@ -385,29 +438,25 @@ export default function App() {
       return;
     }
     
-    const token = await getAuthToken();
-    if (!token) return;
-
-    setIsSyncing(true);
+    setSyncingAction('tasks');
     const toastId = toast.loading('Đang chuẩn bị danh sách Tasks...');
 
     try {
       // 1. Get or Create Task List
-      const listsRes = await fetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const listsRes = await googleFetch('https://www.googleapis.com/tasks/v1/users/@me/lists');
+      if (!listsRes.ok) throw new Error(await getApiErrorMessage(listsRes));
       const listsData = await listsRes.json();
       let listId = listsData.items?.find((l: any) => l.title === 'TOEIC Master - Words to Learn')?.id;
 
       if (!listId) {
-        const newListRes = await fetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
+        const newListRes = await googleFetch('https://www.googleapis.com/tasks/v1/users/@me/lists', {
           method: 'POST',
           headers: { 
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ title: 'TOEIC Master - Words to Learn' })
         });
+        if (!newListRes.ok) throw new Error(await getApiErrorMessage(newListRes));
         const newList = await newListRes.json();
         listId = newList.id;
       }
@@ -420,10 +469,9 @@ export default function App() {
       }
 
       for (const w of words) {
-        await fetch(`https://www.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
+        const taskRes = await googleFetch(`https://www.googleapis.com/tasks/v1/lists/${listId}/tasks`, {
           method: 'POST',
           headers: { 
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
@@ -432,14 +480,15 @@ export default function App() {
             due: new Date(Date.now() + 86400000).toISOString() // Tomorrow
           })
         });
+        if (!taskRes.ok) throw new Error(await getApiErrorMessage(taskRes));
       }
 
       toast.success('Đã đồng bộ sang Google Tasks!', { id: toastId });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast.error('Lỗi khi đồng bộ Tasks', { id: toastId });
     } finally {
-      setIsSyncing(false);
+      setSyncingAction(null);
     }
   };
 
@@ -449,12 +498,9 @@ export default function App() {
       return;
     }
 
-    const token = await getAuthToken();
-    if (!token) return;
-
     if (!window.confirm('Bạn có muốn xuất báo cáo tiến độ học tập sang Google Drive không?')) return;
 
-    setIsSyncing(true);
+    setSyncingAction('drive');
     const toastId = toast.loading('Đang khởi tạo tệp báo cáo...');
 
     try {
@@ -485,23 +531,22 @@ export default function App() {
         JSON.stringify(report, null, 2) + `\r\n` +
         `--${boundary}--`;
 
-      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      const res = await googleFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
           'Content-Type': `multipart/related; boundary=${boundary}`
         },
         body: multipartBody
       });
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) throw new Error(await getApiErrorMessage(res));
       
       toast.success('Đã lưu báo cáo vào Google Drive!', { id: toastId });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       toast.error('Lỗi khi xuất Drive', { id: toastId });
     } finally {
-      setIsSyncing(false);
+      setSyncingAction(null);
     }
   };
 
@@ -540,29 +585,16 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ word, meaning }),
       });
+      if (!res.ok) throw new Error(await getApiErrorMessage(res));
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setExplainingWord({ word, meaning, content: data.text });
     } catch (err) {
       console.error(err);
-      toast.error('Không thể lấy thông tin chi tiết');
+      toast.error(err instanceof Error ? err.message : 'Không thể lấy thông tin chi tiết');
       setExplainingWord(null);
     } finally {
       setIsExplaining(false);
-    }
-  };
-
-  const seedVocabulary = async () => {
-    try {
-      toast.loading('Đang khởi tạo dữ liệu...');
-      for (const word of VOCABULARY) {
-        await setDoc(doc(db, 'words', word.id), word);
-      }
-      toast.dismiss();
-      toast.success('Đã nạp dữ liệu từ vựng!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Lỗi khi nạp dữ liệu');
     }
   };
 
@@ -700,7 +732,8 @@ export default function App() {
                 onSyncTasks={() => syncToGoogleTasks()}
                 onSyncCalendar={() => syncToGoogleCalendar()}
                 onExportDrive={exportToGoogleDrive}
-                isSyncing={isSyncing}
+                syncingAction={syncingAction}
+                isGuest={isGuest}
                 onViewStats={() => setCurrentView('stats')}
               />
             </div>
@@ -771,6 +804,8 @@ export default function App() {
                     );
                   } catch (err) {
                     console.error("Failed to update progress for quiz word in DB", err);
+                    setProgress(progress);
+                    toast.error('Không thể lưu tiến độ quiz lên Cloud.');
                   }
                 }
               }}
@@ -805,6 +840,8 @@ export default function App() {
                     );
                   } catch (err) {
                      console.error("Failed to update progress in DB", err);
+                     setProgress(progress);
+                     toast.error('Không thể lưu tiến độ luyện tập lên Cloud.');
                   }
                 }
               }}
@@ -814,15 +851,48 @@ export default function App() {
             <SettingsView 
               isGuest={isGuest}
               profile={profile}
+              progress={progress}
               onCancel={() => setCurrentView('dashboard')}
+              onImportBackup={async (backup) => {
+                const importedProgress = backup.progress || {};
+                const importedProfile = backup.profile ? { ...profile, ...backup.profile } : profile;
+
+                if (isGuest) {
+                  setProgress(importedProgress);
+                  if (importedProfile) {
+                    setProfile(importedProfile);
+                    localStorage.setItem('guest_profile', JSON.stringify(importedProfile));
+                  }
+                  localStorage.setItem('guest_progress', JSON.stringify(importedProgress));
+                  return;
+                }
+
+                if (user && importedProfile) {
+                  const cloudProfile = {
+                    ...importedProfile,
+                    uid: user.uid,
+                    email: user.email || importedProfile.email,
+                  };
+                  const batch = writeBatch(db);
+                  batch.set(doc(db, 'users', user.uid), cloudProfile);
+                  Object.entries(importedProgress).forEach(([wordId, item]) => {
+                    batch.set(doc(db, `users/${user.uid}/progress`, wordId), toStoredProgress(user.uid, wordId, item));
+                  });
+                  await batch.commit();
+                  setProfile(cloudProfile);
+                  setProgress(importedProgress);
+                }
+              }}
               onUpdateProfile={async (updates: Partial<UserProfile>) => {
                  if (profile && !isGuest) {
+                    const previousProfile = profile;
                     const newProfile = { ...profile, ...updates };
                     setProfile(newProfile);
                     try {
                        await updateDoc(doc(db, 'users', profile.uid), updates);
                     } catch (err) {
                        console.error('Failed to update profile', err);
+                       setProfile(previousProfile);
                        toast.error('Lỗi khi lưu cấu hình.');
                     }
                  } else if (profile && isGuest) {
@@ -907,7 +977,8 @@ function Dashboard({
   onSyncTasks,
   onSyncCalendar,
   onExportDrive,
-  isSyncing,
+  syncingAction,
+  isGuest,
   onViewStats
 }: { 
   profile: UserProfile | null; 
@@ -918,7 +989,8 @@ function Dashboard({
   onSyncTasks: () => void;
   onSyncCalendar: () => void;
   onExportDrive: () => void;
-  isSyncing: boolean;
+  syncingAction: SyncAction | null;
+  isGuest: boolean;
   onViewStats: () => void;
 }) {
   const reviewCount = VOCABULARY.filter(w => {
@@ -926,6 +998,30 @@ function Dashboard({
     if (!p) return true; // New words
     return new Date(p.nextReviewDate) <= new Date();
   }).length;
+  const dailyGoal = profile?.dailyGoal || 15;
+  const todayKey = new Date().toLocaleDateString();
+  const todayStudiedCount = profile?.history
+    ?.filter((session) => new Date(session.date).toLocaleDateString() === todayKey)
+    .reduce((total, session) => {
+      const value = Number(session.score?.replace(/\D/g, '') || 0);
+      return total + (Number.isFinite(value) ? value : 0);
+    }, 0) || 0;
+  const dailyPlan = VOCABULARY
+    .map((word) => ({ word, progress: progress[word.id] }))
+    .sort((a, b) => {
+      const aWrong = a.progress?.wrongCount || 0;
+      const bWrong = b.progress?.wrongCount || 0;
+      if (aWrong !== bWrong) return bWrong - aWrong;
+      const aDue = a.progress ? new Date(a.progress.nextReviewDate).getTime() : 0;
+      const bDue = b.progress ? new Date(b.progress.nextReviewDate).getTime() : 0;
+      return aDue - bDue;
+    })
+    .slice(0, Math.min(20, dailyGoal));
+  const weakWords = VOCABULARY
+    .filter((word) => (progress[word.id]?.wrongCount || 0) > 0)
+    .sort((a, b) => (progress[b.id]?.wrongCount || 0) - (progress[a.id]?.wrongCount || 0))
+    .slice(0, 5);
+  const syncDisabled = syncingAction !== null || isGuest;
 
   return (
     <motion.div 
@@ -939,37 +1035,42 @@ function Dashboard({
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-600/10 blur-[100px] -mr-32 -mt-32" />
           <div className="relative z-10 space-y-3">
             <div className="flex justify-between items-start">
-              <div className="px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-full w-fit text-[10px] font-black tracking-widest inline-flex items-center gap-1.5 border border-indigo-500/20 uppercase">
+              <div className={cn(
+                "px-3 py-1 rounded-full w-fit text-[10px] font-black tracking-widest inline-flex items-center gap-1.5 border uppercase",
+                isGuest
+                  ? "bg-zinc-800/60 text-zinc-400 border-zinc-700"
+                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              )}>
                 <Sparkles className="w-3 h-3" />
-                Tài khoản VIP Active
+                {isGuest ? "Offline guest" : "Google connected"}
               </div>
               <div className="flex gap-2">
                 <Button 
                   onClick={onSyncTasks} 
-                  disabled={isSyncing} 
+                  disabled={syncDisabled} 
                   variant="outline" 
                   className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-indigo-600 hover:border-indigo-500"
                 >
                   <ClipboardList className="w-3 h-3" />
-                  G-Tasks Sync
+                  {syncingAction === 'tasks' ? "Syncing..." : "Tasks"}
                 </Button>
                 <Button 
                   onClick={onExportDrive} 
-                  disabled={isSyncing} 
+                  disabled={syncDisabled} 
                   variant="outline" 
                   className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-emerald-600 hover:border-emerald-500"
                 >
                   <FileDown className="w-3 h-3" />
-                  Drive Export
+                  {syncingAction === 'drive' ? "Exporting..." : "Drive"}
                 </Button>
                 <Button 
                   onClick={onSyncCalendar} 
-                  disabled={isSyncing} 
+                  disabled={syncDisabled} 
                   variant="outline" 
                   className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-rose-600 hover:border-rose-500"
                 >
                   <Calendar className="w-3 h-3" />
-                  G-Calendar Sync
+                  {syncingAction === 'calendar' ? "Syncing..." : "Calendar"}
                 </Button>
               </div>
             </div>
@@ -992,7 +1093,7 @@ function Dashboard({
               <div className="flex -space-x-3">
                 {[1,2,3].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0c0c0e] bg-zinc-800 shadow-lg" />)}
               </div>
-              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">12.5k học viên đang Online</span>
+              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{dailyPlan.length} từ trong kế hoạch hôm nay</span>
             </div>
           </div>
         </Card>
@@ -1055,6 +1156,66 @@ function Dashboard({
             <div className="text-zinc-500 font-black uppercase text-[10px] tracking-[0.2em] mt-2">Từ đã học</div>
           </Card>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 border-zinc-800/50 bg-[#0c0c0e]/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Target className="w-5 h-5 text-indigo-400" />
+                Kế hoạch hôm nay
+              </h3>
+              <p className="text-sm text-zinc-500 mt-1">Ưu tiên từ đến hạn, từ sai nhiều và từ mới.</p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-black text-indigo-400">{Math.min(todayStudiedCount, dailyGoal)} / {dailyGoal}</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">mục tiêu ngày</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {dailyPlan.slice(0, 6).map(({ word, progress: item }) => (
+              <div key={word.id} className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+                <div className="min-w-0">
+                  <div className="font-bold text-white truncate">{word.word}</div>
+                  <div className="text-xs text-zinc-500 truncate">{word.meaning}</div>
+                </div>
+                <span className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase border",
+                  item?.wrongCount
+                    ? "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                    : item
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                )}>
+                  {item?.wrongCount ? "weak" : item ? "due" : "new"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="border-zinc-800/50 bg-[#0c0c0e]/50">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2 mb-5">
+            <Brain className="w-5 h-5 text-rose-400" />
+            Weak Words
+          </h3>
+          {weakWords.length > 0 ? (
+            <div className="space-y-3">
+              {weakWords.map((word) => (
+                <div key={word.id} className="rounded-2xl border border-rose-500/10 bg-rose-500/5 p-3">
+                  <div className="flex justify-between gap-3">
+                    <span className="font-bold text-white">{word.word}</span>
+                    <span className="text-xs font-black text-rose-400">{progress[word.id]?.wrongCount || 0} lỗi</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-1 line-clamp-1">{word.meaning}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-500 leading-relaxed">Chưa có từ yếu. Làm quiz hoặc ôn tập để hệ thống ghi nhận các từ cần luyện thêm.</p>
+          )}
+        </Card>
       </div>
 
       <div className="space-y-6">
@@ -1198,6 +1359,7 @@ function Browse({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ word, meaning }),
       });
+      if (!res.ok) throw new Error(await getApiErrorMessage(res));
       const data = await res.json();
       if (data.error) throw new Error(data.error);
 
@@ -1209,7 +1371,7 @@ function Browse({
       console.error(err);
       setInlineExplanations(prev => ({
         ...prev,
-        [wordId]: { loading: false, content: null, error: 'Failed to load explanation.' }
+        [wordId]: { loading: false, content: null, error: err instanceof Error ? err.message : 'Failed to load explanation.' }
       }));
     }
   };
@@ -1329,6 +1491,9 @@ function Browse({
 function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => void, onFinish?: (score: number, total: number) => void, onWordResult?: (wordId: string, isCorrect: boolean) => void }) {
   const [quizMode, setQuizMode] = useState<'standard' | 'ai' | null>(null);
   const [questions, setQuestions] = useState<{ word: Word; questionText: string; options: string[]; answer: string; type: 'mcq' | 'fill'; hint?: string; translation?: string; explanation?: string; isAi?: boolean }[]>([]);
+  const [missedAnswers, setMissedAnswers] = useState<{ word: Word; userAnswer: string; correctAnswer: string }[]>([]);
+  const [mistakeReview, setMistakeReview] = useState<string | null>(null);
+  const [isReviewingMistakes, setIsReviewingMistakes] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [typedAnswer, setTypedAnswer] = useState('');
@@ -1348,6 +1513,8 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
     setIsFinished(false);
     setShowAnswer(false);
     setShowHint(false);
+    setMissedAnswers([]);
+    setMistakeReview(null);
 
     if (mode === 'standard') {
       try {
@@ -1402,7 +1569,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
           body: JSON.stringify({ words: selectedWords.map(w => ({ word: w.word, meaning: w.meaning })) })
         });
         
-        if (!res.ok) throw new Error('Failed to generate AI quiz');
+        if (!res.ok) throw new Error(await getApiErrorMessage(res));
         const data = await res.json();
         const aiQuestions = data.questions;
 
@@ -1455,6 +1622,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
         setQuestions(combined);
       } catch (err) {
         console.error(err);
+        toast.error(err instanceof Error ? `AI quiz: ${err.message}. Đang dùng quiz offline.` : 'Không thể tạo AI quiz, đang dùng quiz offline.');
         // Fallback local quiz
         const selectedWords = [...VOCABULARY].sort(() => Math.random() - 0.5).slice(0, 10);
         setQuestions(selectedWords.map(word => {
@@ -1494,6 +1662,8 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
     const isCorrect = option === questions[currentIndex].answer;
     if (isCorrect) {
       setScore(score + 1);
+    } else {
+      setMissedAnswers(prev => [...prev, { word: questions[currentIndex].word, userAnswer: option, correctAnswer: questions[currentIndex].answer }]);
     }
     if (onWordResult) {
       onWordResult(questions[currentIndex].word.id, isCorrect);
@@ -1509,6 +1679,8 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
     const isCorrect = typedAnswer.trim().toLowerCase() === questions[currentIndex].answer.toLowerCase();
     if (isCorrect) {
       setScore(score + 1);
+    } else {
+      setMissedAnswers(prev => [...prev, { word: questions[currentIndex].word, userAnswer: typedAnswer, correctAnswer: questions[currentIndex].answer }]);
     }
     setSelectedOption(typedAnswer);
     if (onWordResult) {
@@ -1525,8 +1697,34 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
       setShowHint(false);
     } else {
       setIsFinished(true);
+      const finalScore = questions.length - missedAnswers.length;
       if (onFinish) {
-        onFinish(score, questions.length);
+        onFinish(finalScore, questions.length);
+      }
+      if (missedAnswers.length > 0) {
+        setIsReviewingMistakes(true);
+        fetch('/api/gemini/mistake-review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mistakes: missedAnswers.map((item) => ({
+              word: item.word.word,
+              meaning: item.word.meaning,
+              userAnswer: item.userAnswer,
+              correctAnswer: item.correctAnswer,
+            })),
+          }),
+        })
+          .then(async (res) => {
+            if (!res.ok) throw new Error(await getApiErrorMessage(res));
+            return res.json();
+          })
+          .then((data) => setMistakeReview(data.text || null))
+          .catch((err) => {
+            console.error(err);
+            setMistakeReview(err instanceof Error ? err.message : null);
+          })
+          .finally(() => setIsReviewingMistakes(false));
       }
     }
   };
@@ -1591,7 +1789,8 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
   if (questions.length === 0) return null;
 
   if (isFinished) {
-    const percentage = (score / questions.length) * 100;
+    const finalScore = questions.length - missedAnswers.length;
+    const percentage = (finalScore / questions.length) * 100;
     return (
       <motion.div 
         initial={{ opacity: 0, scale: 0.9 }}
@@ -1611,7 +1810,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
 
         <div className="grid grid-cols-2 gap-4">
           <Card className="bg-zinc-900 border-zinc-800">
-            <div className="text-4xl font-black text-white">{score} / {questions.length}</div>
+            <div className="text-4xl font-black text-white">{finalScore} / {questions.length}</div>
             <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">Câu trả lời đúng</div>
           </Card>
           <Card className="bg-zinc-900 border-zinc-800">
@@ -1619,6 +1818,31 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
             <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mt-1">Độ chính xác</div>
           </Card>
         </div>
+
+        {missedAnswers.length > 0 && (
+          <Card className="bg-zinc-900 border-zinc-800 text-left">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <h3 className="font-black text-white">AI Mistake Review</h3>
+            </div>
+            {isReviewingMistakes ? (
+              <p className="text-sm text-zinc-500 font-medium">AI đang phân tích các lỗi sai...</p>
+            ) : mistakeReview ? (
+              <div className="prose prose-invert prose-sm max-w-none text-slate-300">
+                <ReactMarkdown>{mistakeReview}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {missedAnswers.map((item) => (
+                  <div key={`${item.word.id}-${item.userAnswer}`} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
+                    <div className="font-bold text-white">{item.word.word}</div>
+                    <div className="text-xs text-zinc-500">Bạn chọn: {item.userAnswer || 'trống'} · Đúng: {item.correctAnswer}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
 
         <div className="space-y-3 pt-6">
           <Button onClick={() => { setQuizMode(null); setIsFinished(false); }} className="w-full py-4 text-lg">Làm lại bài thi</Button>
@@ -2493,15 +2717,19 @@ function PracticeSession({
 
 function SettingsView({ 
   profile,
+  progress,
   isGuest,
   onResetProgress,
   onCancel,
+  onImportBackup,
   onUpdateProfile
 }: { 
   profile: UserProfile | null;
+  progress: UserProgress;
   isGuest: boolean;
   onResetProgress: () => void;
   onCancel: () => void;
+  onImportBackup: (backup: { profile?: UserProfile; progress?: UserProgress }) => Promise<void>;
   onUpdateProfile: (updates: Partial<UserProfile>) => void;
 }) {
   const [notifications, setNotifications] = useState(
@@ -2512,7 +2740,14 @@ function SettingsView({
   );
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState(profile?.displayName || '');
+  const [goalInput, setGoalInput] = useState(String(profile?.dailyGoal || 15));
   const [isGeneratingAvatar, setIsGeneratingAvatar] = useState(false);
+
+  useEffect(() => {
+    if (notifications && 'Notification' in window && Notification.permission === 'granted') {
+      scheduleStudyReminder();
+    }
+  }, [notifications]);
 
   const handleGenerateAvatar = async () => {
     if (isGuest) {
@@ -2527,7 +2762,7 @@ function SettingsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: "A minimal, clean vector avatar for a professional profile, solid bright background, simple geometric shapes, very cute" })
       });
-      if (!res.ok) throw new Error('Generation failed');
+      if (!res.ok) throw new Error(await getApiErrorMessage(res));
       const data = await res.json();
       if (data.image) {
         onUpdateProfile({ photoURL: data.image });
@@ -2537,7 +2772,7 @@ function SettingsView({
       }
     } catch(err) {
       console.error(err);
-      toast.error('Không thể tạo avatar, vui lòng thử lại sau.', { id: toastId });
+      toast.error(err instanceof Error ? err.message : 'Không thể tạo avatar, vui lòng thử lại sau.', { id: toastId });
     } finally {
       setIsGeneratingAvatar(false);
     }
@@ -2553,6 +2788,70 @@ function SettingsView({
     toast.success('Đã cập nhật hồ sơ!');
   };
 
+  const handleSaveGoal = () => {
+    const nextGoal = Number(goalInput);
+    if (!Number.isInteger(nextGoal) || nextGoal < 5 || nextGoal > 50) {
+      toast.error('Mục tiêu mỗi ngày cần nằm trong khoảng 5-50 từ.');
+      return;
+    }
+    onUpdateProfile({ dailyGoal: nextGoal });
+    toast.success('Đã cập nhật mục tiêu học tập!');
+  };
+
+  const downloadFile = (filename: string, content: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportBackup = () => {
+    downloadFile(
+      `toeic-master-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      JSON.stringify({ profile, progress, exportedAt: new Date().toISOString() }, null, 2),
+      'application/json'
+    );
+  };
+
+  const exportCsv = () => {
+    const rows = [
+      ['wordId', 'easiness', 'interval', 'repetitions', 'nextReviewDate', 'lastReviewDate', 'wrongCount'],
+      ...Object.entries(progress).map(([wordId, item]) => [
+        wordId,
+        String(item.easiness),
+        String(item.interval),
+        String(item.repetitions),
+        item.nextReviewDate,
+        item.lastReviewDate || '',
+        String(item.wrongCount || 0),
+      ]),
+    ];
+    downloadFile(
+      `toeic-master-progress-${new Date().toISOString().slice(0, 10)}.csv`,
+      rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n'),
+      'text/csv'
+    );
+  };
+
+  const importBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const backup = JSON.parse(await file.text());
+      await onImportBackup({ profile: backup.profile, progress: backup.progress });
+      toast.success('Đã nhập dữ liệu học tập!');
+    } catch (err) {
+      console.error(err);
+      toast.error('File backup không hợp lệ.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
   const toggleNotifications = () => {
     const newVal = !notifications;
     setNotifications(newVal);
@@ -2562,11 +2861,7 @@ function SettingsView({
         Notification.requestPermission().then(permission => {
           if (permission === 'granted') {
             toast.success('Đã bật thông báo trình duyệt');
-            // Mock sending a test notification
-            new Notification('TOEIC Master', {
-               body: 'Thông báo đã được bật thành công!',
-               icon: '/favicon.ico'
-            });
+            scheduleStudyReminder();
           } else {
             setNotifications(false);
             localStorage.setItem('app_notifications', 'false');
@@ -2577,6 +2872,7 @@ function SettingsView({
         toast.error('Trình duyệt không hỗ trợ thông báo.');
       }
     } else {
+      clearStudyReminder();
       toast.success('Đã tắt thông báo');
     }
   };
@@ -2685,6 +2981,29 @@ function SettingsView({
 
         <Card className="bg-[#0c0c0e] border-zinc-800 p-0 overflow-hidden">
           <div className="p-6 border-b border-zinc-800">
+            <h3 className="font-bold text-lg text-white mb-1">Mục tiêu học tập</h3>
+            <p className="text-sm text-zinc-500">Đặt số từ cần hoàn thành mỗi ngày trên dashboard.</p>
+          </div>
+          <div className="p-6 flex flex-col sm:flex-row gap-4 sm:items-end">
+            <label className="flex-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 block mb-2">Từ mỗi ngày</span>
+              <input
+                type="number"
+                min={5}
+                max={50}
+                value={goalInput}
+                onChange={(event) => setGoalInput(event.target.value)}
+                className="bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white font-bold w-full focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </label>
+            <Button onClick={handleSaveGoal} className="py-3 px-6">
+              Lưu mục tiêu
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="bg-[#0c0c0e] border-zinc-800 p-0 overflow-hidden">
+          <div className="p-6 border-b border-zinc-800">
             <h3 className="font-bold text-lg text-white mb-1">Thiết lập chung</h3>
             <p className="text-sm text-zinc-500">Cấu hình ứng dụng</p>
           </div>
@@ -2754,6 +3073,25 @@ function SettingsView({
                 )}></div>
               </button>
             </div>
+          </div>
+        </Card>
+
+        <Card className="bg-[#0c0c0e] border-zinc-800 p-0 overflow-hidden">
+          <div className="p-6 border-b border-zinc-800">
+            <h3 className="font-bold text-lg text-white mb-1">Sao lưu dữ liệu</h3>
+            <p className="text-sm text-zinc-500">Xuất hoặc nhập lại tiến độ học tập ngoài Firebase.</p>
+          </div>
+          <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Button onClick={exportBackup} variant="outline" className="py-3">
+              JSON Backup
+            </Button>
+            <Button onClick={exportCsv} variant="outline" className="py-3">
+              CSV Export
+            </Button>
+            <label className="px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 cursor-pointer border border-zinc-700 text-slate-300 hover:bg-zinc-800 hover:text-white">
+              Import JSON
+              <input type="file" accept="application/json,.json" onChange={importBackup} className="hidden" />
+            </label>
           </div>
         </Card>
 

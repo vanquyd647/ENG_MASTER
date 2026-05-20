@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   BarChart, 
   Bar, 
@@ -50,8 +50,7 @@ interface StatsViewProps {
 }
 
 export function StatsView({ progress, onBack }: StatsViewProps) {
-  const [useSampleData, setUseSampleData] = useState(Object.keys(progress).length === 0);
-
+  const useSampleData = false;
   // --- Real Stats Calculation ---
   const totalWords = VOCABULARY.length;
   const progressList = Object.values(progress);
@@ -208,7 +207,7 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
         {/* Filter Toggle */}
         <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 p-1.5 rounded-2xl w-fit">
           <button
-            onClick={() => setUseSampleData(false)}
+            onClick={() => undefined}
             disabled={Object.keys(progress).length === 0}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               !useSampleData 
@@ -219,8 +218,8 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
             Dữ liệu của bạn
           </button>
           <button
-            onClick={() => setUseSampleData(true)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            onClick={() => undefined}
+            className={`hidden px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               useSampleData 
                 ? 'bg-indigo-600 text-white shadow-md' 
                 : 'text-zinc-400 hover:text-slate-300'
@@ -235,8 +234,11 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
         <div className="bg-amber-500/10 border border-amber-500/20 text-amber-200 rounded-3xl p-6 flex items-start gap-4">
           <Info className="w-6 h-6 shrink-0 text-amber-400" />
           <div className="space-y-1">
-            <h4 className="font-bold text-sm">Chưa có dữ liệu học tập!</h4>
             <p className="text-xs text-amber-300/80 leading-relaxed font-medium">
+              Ban chua co tien trinh hoc that. Hay quay lai Dashboard de hoc hoac lam quiz, thong ke se tu dong cap nhat tu du lieu cua ban.
+            </p>
+            <h4 className="font-bold text-sm">Chưa có dữ liệu học tập!</h4>
+            <p className="hidden text-xs text-amber-300/80 leading-relaxed font-medium">
               Bạn chưa học từ vựng nào bằng phương pháp lặp khoảng cách (SRS). Hãy bấm "Dữ liệu mẫu" ở trên để xem bản thử trước hoặc bắt đầu ôn từ tại Dashboard để tạo tiến trình thật!
             </p>
           </div>
