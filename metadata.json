@@ -1,0 +1,6 @@
+{
+  "name": "TOEIC Master",
+  "description": "A comprehensive vocabulary learning app with Spaced Repetition (SRS), flashcards, and AI explanations. Features include Google Tasks sync and Google Drive progress export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

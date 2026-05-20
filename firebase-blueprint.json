@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "User profile and global learning stats",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "totalWordsLearned": { "type": "integer" },
+        "studyTimeMinutes": { "type": "integer" },
+        "streak": { "type": "integer" },
+        "lastStudyDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "word": {
+      "title": "Vocabulary Word",
+      "description": "Information about a specific vocabulary word",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "topic": { "type": "string" },
+        "word": { "type": "string" },
+        "phonetic": { "type": "string" },
+        "pos": { "type": "string" },
+        "meaning": { "type": "string" },
+        "example": { "type": "string" },
+        "exampleTranslation": { "type": "string" }
+      },
+      "required": ["word", "meaning", "topic"]
+    },
+    "userWordProgress": {
+      "title": "User Word Progress",
+      "description": "Spaced repetition state for a user and a word",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "wordId": { "type": "string" },
+        "easiness": { "type": "number" },
+        "interval": { "type": "integer" },
+        "repetitions": { "type": "integer" },
+        "nextReviewDate": { "type": "string", "format": "date-time" },
+        "lastReviewDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["new", "learning", "learned", "mastered"] }
+      },
+      "required": ["userId", "wordId", "nextReviewDate"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Public and private user profile data"
+    },
+    "/words/{wordId}": {
+      "schema": "word",
+      "description": "Static vocabulary dictionary"
+    },
+    "/users/{userId}/progress/{wordId}": {
+      "schema": "userWordProgress",
+      "description": "User-specific learning progress for each word"
+    }
+  }
+}
