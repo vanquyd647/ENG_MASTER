@@ -194,8 +194,8 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <h2 className="text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <TrendingUp className="text-indigo-400 w-8 h-8" />
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+              <TrendingUp className="text-indigo-400 w-6 h-6 sm:w-8 sm:h-8" />
               Phân Tích Thống Kê
             </h2>
           </div>
@@ -205,11 +205,11 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
         </div>
 
         {/* Filter Toggle */}
-        <div className="flex items-center gap-3 bg-zinc-900 border border-zinc-800 p-1.5 rounded-2xl w-fit">
+        <div className="flex items-center gap-2 sm:gap-3 bg-zinc-900 border border-zinc-800 p-1.5 rounded-2xl w-full sm:w-fit">
           <button
             onClick={() => undefined}
             disabled={Object.keys(progress).length === 0}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               !useSampleData 
                 ? 'bg-indigo-600 text-white shadow-md' 
                 : 'text-zinc-400 hover:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed'
@@ -247,10 +247,10 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
 
       {/* Grid of Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
           <div className="space-y-2 relative z-10">
             <div className="text-zinc-400 font-bold text-xs uppercase tracking-wider">Tổng từ vựng</div>
-            <div className="text-4xl font-black text-white">{totalWords}</div>
+            <div className="text-3xl sm:text-4xl font-black text-white">{totalWords}</div>
             <div className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full inline-block">Mục tiêu TOEIC</div>
           </div>
           <div className="bg-indigo-500/10 border border-indigo-500/20 w-12 h-12 rounded-[20px] flex items-center justify-center text-indigo-400 relative z-10">
@@ -258,10 +258,10 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
           <div className="space-y-2 relative z-10">
             <div className="text-zinc-400 font-bold text-xs uppercase tracking-wider">Đang chinh phục</div>
-            <div className="text-4xl font-black text-amber-400">{useSampleData ? 20 : startedWordsCount}</div>
+            <div className="text-3xl sm:text-4xl font-black text-amber-400">{useSampleData ? 20 : startedWordsCount}</div>
             <div className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full inline-block">Đang nằm trong SRS</div>
           </div>
           <div className="bg-amber-500/10 border border-amber-500/20 w-12 h-12 rounded-[20px] flex items-center justify-center text-amber-400 relative z-10">
@@ -269,10 +269,10 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
           <div className="space-y-2 relative z-10">
             <div className="text-zinc-400 font-bold text-xs uppercase tracking-wider">Trình độ Thuộc</div>
-            <div className="text-4xl font-black text-emerald-400">{useSampleData ? 8 : learnedCount}</div>
+            <div className="text-3xl sm:text-4xl font-black text-emerald-400">{useSampleData ? 8 : learnedCount}</div>
             <div className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full inline-block">Repetitions &ge; 5</div>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/20 w-12 h-12 rounded-[20px] flex items-center justify-center text-emerald-400 relative z-10">
@@ -280,10 +280,10 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
           </div>
         </div>
 
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
           <div className="space-y-2 relative z-10">
             <div className="text-zinc-400 font-bold text-xs uppercase tracking-wider">Độ dễ trung bình (EF)</div>
-            <div className="text-4xl font-black text-indigo-400">{avgEasinessCurrent.toFixed(2)}</div>
+            <div className="text-3xl sm:text-4xl font-black text-indigo-400">{avgEasinessCurrent.toFixed(2)}</div>
             <div className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded-full inline-block">Tiêu chuẩn: 2.50</div>
           </div>
           <div className="bg-indigo-500/10 border border-indigo-500/20 w-12 h-12 rounded-[20px] flex items-center justify-center text-indigo-400 relative z-10">
@@ -296,7 +296,7 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Learned vs In Progress Donut Chart */}
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 flex flex-col justify-between shadow-2xl min-h-[400px]">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 flex flex-col justify-between shadow-2xl min-h-[360px] sm:min-h-[400px]">
           <div className="space-y-1 pb-4">
             <h3 className="font-bold text-lg text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-indigo-400" />
@@ -356,7 +356,7 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
         </div>
 
         {/* Interval Distribution Bar Chart */}
-        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 lg:col-span-2 flex flex-col justify-between shadow-2xl min-h-[400px]">
+        <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 lg:col-span-2 flex flex-col justify-between shadow-2xl min-h-[360px] sm:min-h-[400px]">
           <div className="space-y-1 pb-4">
             <h3 className="font-bold text-lg text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-indigo-400" />
@@ -421,7 +421,7 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
       </div>
 
       {/* Row for Easiness Curve over Time */}
-      <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-[32px] p-6 shadow-2xl">
+      <div className="bg-[#0c0c0e] border border-zinc-800/80 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 shadow-2xl">
         <div className="space-y-1 pb-6 border-b border-zinc-800/50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div className="space-y-1">
             <h3 className="font-bold text-lg text-white flex items-center gap-2">
@@ -432,7 +432,7 @@ export function StatsView({ progress, onBack }: StatsViewProps) {
           </div>
           
           <div className="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-2xl flex items-center gap-3 w-fit">
-            <div className="w-3-h-3">
+            <div className="w-3 h-3">
               <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">Xu Hướng: Ghi Nhớ Tốt</span>

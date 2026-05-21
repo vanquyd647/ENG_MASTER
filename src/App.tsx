@@ -117,11 +117,11 @@ const toStoredProgress = (uid: string, wordId: string, item: ProgressItem) =>
 const Modal = ({ isOpen, onClose, title, children }: { isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }) => (
   <AnimatePresence>
     {isOpen && (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative bg-zinc-900 border border-zinc-800 w-full max-w-xl max-h-[80vh] overflow-y-auto rounded-[32px] shadow-2xl p-8 space-y-6">
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative bg-zinc-900 border border-zinc-800 w-full max-w-xl max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl sm:rounded-[32px] shadow-2xl p-5 sm:p-8 space-y-6">
           <div className="flex justify-between items-center text-white">
-            <h3 className="text-2xl font-bold tracking-tight">{title}</h3>
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{title}</h3>
             <button onClick={onClose} className="p-2 hover:bg-zinc-800 rounded-full transition-all">
               <LogOut className="w-5 h-5 rotate-180 text-zinc-500" />
             </button>
@@ -179,7 +179,7 @@ const Button = ({
 };
 
 const Card = ({ children, className, id, onClick }: { children: React.ReactNode; className?: string; id?: string; onClick?: () => void }) => (
-  <div id={id} onClick={onClick} className={cn('bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-xl shadow-black/10', className)}>
+  <div id={id} onClick={onClick} className={cn('bg-zinc-900 border border-zinc-800 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl shadow-black/10', className)}>
     {children}
   </div>
 );
@@ -615,43 +615,43 @@ export default function App() {
 
   if (!user && !isGuest) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#09090b] text-slate-200 p-6 font-sans overflow-hidden relative">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#09090b] text-slate-200 p-4 sm:p-6 font-sans overflow-hidden relative">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full text-center space-y-12 relative z-10"
+          className="max-w-md w-full text-center space-y-8 sm:space-y-12 relative z-10"
         >
           <div className="space-y-6">
-            <div className="w-24 h-24 bg-indigo-600 rounded-[32px] mx-auto flex items-center justify-center shadow-2xl shadow-indigo-500/40">
-              <GraduationCap className="text-white w-12 h-12" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-indigo-600 rounded-[28px] sm:rounded-[32px] mx-auto flex items-center justify-center shadow-2xl shadow-indigo-500/40">
+              <GraduationCap className="text-white w-10 h-10 sm:w-12 sm:h-12" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-5xl font-bold tracking-tighter text-white">TOEIC Master</h1>
-              <p className="text-zinc-500 text-lg font-medium">Học từ vựng thông minh với SRS v2.0</p>
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tighter text-white">TOEIC Master</h1>
+              <p className="text-zinc-500 text-base sm:text-lg font-medium">Học từ vựng thông minh với SRS v2.0</p>
             </div>
           </div>
           <div className="space-y-4">
-            <Button onClick={login} className="w-full py-4 text-lg rounded-2xl">
+            <Button onClick={login} className="w-full py-3.5 sm:py-4 text-base sm:text-lg rounded-2xl">
               Đăng nhập với Google
             </Button>
-            <Button onClick={handleGuestLogin} variant="outline" className="w-full py-4 text-lg rounded-2xl border-zinc-800 text-zinc-400 hover:text-white">
+            <Button onClick={handleGuestLogin} variant="outline" className="w-full py-3.5 sm:py-4 text-base sm:text-lg rounded-2xl border-zinc-800 text-zinc-400 hover:text-white">
               Tiếp tục với tư cách Khách
             </Button>
           </div>
-          <div className="pt-10 border-t border-zinc-800/50 grid grid-cols-3 gap-4 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+          <div className="pt-8 sm:pt-10 border-t border-zinc-800/50 grid grid-cols-3 gap-2 sm:gap-4 text-[9px] sm:text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
             <div className="space-y-2">
-              <div className="text-slate-300 text-xl font-bold tracking-tight">1000+</div>
+              <div className="text-slate-300 text-lg sm:text-xl font-bold tracking-tight">1000+</div>
               <div>Từ vựng</div>
             </div>
             <div className="space-y-2 border-x border-zinc-800/50">
-              <div className="text-slate-300 text-xl font-bold tracking-tight">SM-2</div>
+              <div className="text-slate-300 text-lg sm:text-xl font-bold tracking-tight">SM-2</div>
               <div>Thuật toán</div>
             </div>
             <div className="space-y-2">
-              <div className="text-slate-300 text-xl font-bold tracking-tight">27+</div>
+              <div className="text-slate-300 text-lg sm:text-xl font-bold tracking-tight">27+</div>
               <div>Chủ đề</div>
             </div>
           </div>
@@ -675,16 +675,16 @@ export default function App() {
       />
       
       {/* Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#0c0c0e]/80 backdrop-blur-2xl border-t border-zinc-800 px-6 py-4 z-50 md:top-0 md:bottom-auto md:bg-transparent md:border-b-0 md:backdrop-blur-none">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 md:bg-zinc-900 md:px-5 md:py-2.5 md:rounded-2xl md:border md:border-zinc-800 md:shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#0c0c0e]/90 backdrop-blur-2xl border-t border-zinc-800 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-50 md:top-0 md:bottom-auto md:bg-transparent md:border-b-0 md:backdrop-blur-none md:px-6 md:py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center md:justify-between">
+          <div className="hidden md:flex items-center gap-3 md:bg-zinc-900 md:px-5 md:py-2.5 md:rounded-2xl md:border md:border-zinc-800 md:shadow-lg">
             <div className="bg-indigo-600 p-1 rounded-lg">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-lg hidden sm:inline text-white">TOEIC Master</span>
           </div>
           
-          <div className="flex items-center gap-1 md:bg-zinc-900 md:p-1.5 md:rounded-2xl md:border md:border-zinc-800 md:shadow-lg">
+          <div className="grid grid-cols-5 gap-1 w-full md:w-auto md:flex md:items-center md:bg-zinc-900 md:p-1.5 md:rounded-2xl md:border md:border-zinc-800 md:shadow-lg">
             {[
               { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
               { id: 'browse', icon: BookOpen, label: 'Thư viện' },
@@ -696,17 +696,17 @@ export default function App() {
                 key={item.id}
                 onClick={() => setCurrentView(item.id as any)}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-2.5 py-2 rounded-xl transition-all md:flex-row md:px-5 md:py-2.5',
+                  'min-w-0 flex flex-col items-center gap-1 px-1.5 py-2 rounded-xl transition-all md:flex-row md:px-5 md:py-2.5',
                   currentView === item.id ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-slate-300'
                 )}
               >
-                <item.icon className="w-5 h-5" />
-                <span className="text-[10px] font-bold md:text-sm">{item.label}</span>
+                <item.icon className="w-5 h-5 shrink-0" />
+                <span className="w-full truncate text-[9px] leading-tight font-bold md:text-sm">{item.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-3">
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Premium</span>
               <span className="text-sm font-bold text-white">{profile?.displayName}</span>
@@ -721,8 +721,17 @@ export default function App() {
         </div>
       </nav>
 
+      <div className="fixed right-3 top-3 z-40 flex gap-2 md:hidden">
+        <button onClick={() => setCurrentView('settings')} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/90 backdrop-blur-xl text-zinc-400 shadow-lg active:scale-95">
+          <Settings className="w-5 h-5" />
+        </button>
+        <button onClick={logout} className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/90 backdrop-blur-xl text-zinc-400 shadow-lg active:scale-95">
+          <LogOut className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 pt-6 pb-32 md:pt-32">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-28 md:pt-32">
         <AnimatePresence mode="wait">
           {currentView === 'dashboard' && (
             <div className="space-y-8">
@@ -1034,10 +1043,10 @@ function Dashboard({
       className="space-y-8"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 bg-[#0c0c0e] text-white border-zinc-800 shadow-2xl flex flex-col justify-between min-h-[320px] relative overflow-hidden group">
+        <Card className="md:col-span-2 bg-[#0c0c0e] text-white border-zinc-800 shadow-2xl flex flex-col justify-between min-h-[auto] sm:min-h-[320px] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-600/10 blur-[100px] -mr-32 -mt-32" />
           <div className="relative z-10 space-y-3">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
               <div className={cn(
                 "px-3 py-1 rounded-full w-fit text-[10px] font-black tracking-widest inline-flex items-center gap-1.5 border uppercase",
                 isGuest
@@ -1047,12 +1056,12 @@ function Dashboard({
                 <Sparkles className="w-3 h-3" />
                 {isGuest ? "Offline guest" : "Google connected"}
               </div>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:flex">
                 <Button 
                   onClick={onSyncTasks} 
                   disabled={syncDisabled} 
                   variant="outline" 
-                  className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-indigo-600 hover:border-indigo-500"
+                  className="rounded-full py-1.5 px-2 sm:px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-indigo-600 hover:border-indigo-500"
                 >
                   <ClipboardList className="w-3 h-3" />
                   {syncingAction === 'tasks' ? "Syncing..." : "Tasks"}
@@ -1061,7 +1070,7 @@ function Dashboard({
                   onClick={onExportDrive} 
                   disabled={syncDisabled} 
                   variant="outline" 
-                  className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-emerald-600 hover:border-emerald-500"
+                  className="rounded-full py-1.5 px-2 sm:px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-emerald-600 hover:border-emerald-500"
                 >
                   <FileDown className="w-3 h-3" />
                   {syncingAction === 'drive' ? "Exporting..." : "Drive"}
@@ -1070,29 +1079,29 @@ function Dashboard({
                   onClick={onSyncCalendar} 
                   disabled={syncDisabled} 
                   variant="outline" 
-                  className="rounded-full py-1.5 px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-rose-600 hover:border-rose-500"
+                  className="rounded-full py-1.5 px-2 sm:px-3 text-[9px] border-zinc-800 bg-zinc-900/50 hover:bg-rose-600 hover:border-rose-500"
                 >
                   <Calendar className="w-3 h-3" />
                   {syncingAction === 'calendar' ? "Syncing..." : "Calendar"}
                 </Button>
               </div>
             </div>
-            <h2 className="text-5xl font-bold tracking-tighter leading-tight">Chào mừng,<br />{profile?.displayName}!</h2>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tighter leading-tight break-words">Chào mừng,<br />{profile?.displayName}!</h2>
           </div>
           <div className="relative z-10 flex flex-col sm:flex-row gap-4 mt-8">
-            <Button onClick={onStartReview} className="bg-white text-black hover:bg-zinc-100 px-10 py-5 rounded-[20px] text-lg font-bold shadow-2xl">
+            <Button onClick={onStartReview} className="w-full sm:w-auto bg-white text-black hover:bg-zinc-100 px-5 sm:px-10 py-4 sm:py-5 rounded-[20px] text-base sm:text-lg font-bold shadow-2xl">
               Ôn bài ({reviewCount})
               <ChevronRight className="w-5 h-5" />
             </Button>
-            <Button onClick={onStartQuiz} variant="secondary" className="px-8 py-5 rounded-[20px] text-lg font-bold border border-zinc-800">
+            <Button onClick={onStartQuiz} variant="secondary" className="w-full sm:w-auto px-5 sm:px-8 py-4 sm:py-5 rounded-[20px] text-base sm:text-lg font-bold border border-zinc-800">
               Kiểm tra
               <CheckSquare className="w-5 h-5" />
             </Button>
-            <Button onClick={onStartPractice} variant="secondary" className="px-8 py-5 rounded-[20px] text-lg font-bold border border-zinc-800 text-indigo-400 hover:text-indigo-300">
+            <Button onClick={onStartPractice} variant="secondary" className="w-full sm:w-auto px-5 sm:px-8 py-4 sm:py-5 rounded-[20px] text-base sm:text-lg font-bold border border-zinc-800 text-indigo-400 hover:text-indigo-300">
               Luyện tập tự do
               <Target className="w-5 h-5" />
             </Button>
-            <div className="flex gap-4 items-center pl-2">
+            <div className="flex gap-3 sm:gap-4 items-center pl-0 sm:pl-2">
               <div className="flex -space-x-3">
                 {[1,2,3].map(i => <div key={i} className="w-10 h-10 rounded-full border-2 border-[#0c0c0e] bg-zinc-800 shadow-lg" />)}
               </div>
@@ -1101,12 +1110,12 @@ function Dashboard({
           </div>
         </Card>
 
-        <div className="space-y-6">
-          <Card className="flex flex-col items-center justify-center text-center p-6 border-zinc-800/50 bg-[#0c0c0e]/50 relative overflow-hidden group">
+        <div className="grid grid-cols-2 gap-4 md:block md:space-y-6">
+          <Card className="flex flex-col items-center justify-center text-center p-4 sm:p-6 border-zinc-800/50 bg-[#0c0c0e]/50 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="w-14 h-14 bg-orange-500/10 rounded-[22px] flex items-center justify-center mb-4 border border-orange-500/20 relative">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-500/10 rounded-[18px] sm:rounded-[22px] flex items-center justify-center mb-4 border border-orange-500/20 relative">
               <Flame 
-                className="text-orange-500 w-7 h-7" 
+                className="text-orange-500 w-6 h-6 sm:w-7 sm:h-7" 
                 fill={(profile?.streak || 0) > 0 ? "currentColor" : "none"} 
               />
               {(profile?.streak || 0) > 2 && (
@@ -1117,11 +1126,11 @@ function Dashboard({
                 />
               )}
             </div>
-            <div className="text-5xl font-black text-white">{profile?.streak || 0}</div>
+            <div className="text-4xl sm:text-5xl font-black text-white">{profile?.streak || 0}</div>
             <div className="text-zinc-500 font-black uppercase text-[10px] tracking-[0.2em] mt-2 mb-6">Ngày liên tiếp</div>
             
             {/* 7-day mini heatmap representation */}
-            <div className="flex gap-1.5 w-full justify-center">
+            <div className="flex gap-1 w-full justify-center">
               {Array.from({ length: 7 }).map((_, i) => {
                 // Calculate if studied on this day (simplified representation)
                 // Just visually filling it based on `streak` for a simple robust UI if accurate history filtering is complex inline
@@ -1137,7 +1146,7 @@ function Dashboard({
                   <div key={i} className="flex flex-col items-center gap-1.5">
                     <div 
                       className={cn(
-                        "w-5 h-5 rounded-[6px] border transition-all duration-300",
+                        "w-3.5 h-3.5 sm:w-5 sm:h-5 rounded-[5px] sm:rounded-[6px] border transition-all duration-300",
                         hasStudied 
                           ? "bg-orange-500 border-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.4)]" 
                           : "bg-zinc-800/40 border-zinc-700/50"
@@ -1151,11 +1160,11 @@ function Dashboard({
               })}
             </div>
           </Card>
-          <Card className="flex flex-col items-center justify-center text-center py-10 border-zinc-800/50 bg-[#0c0c0e]/50">
-            <div className="w-14 h-14 bg-emerald-500/10 rounded-[22px] flex items-center justify-center mb-4 border border-emerald-500/20">
-              <CheckCircle2 className="text-emerald-500 w-7 h-7" />
+          <Card className="flex flex-col items-center justify-center text-center py-8 sm:py-10 border-zinc-800/50 bg-[#0c0c0e]/50">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 rounded-[18px] sm:rounded-[22px] flex items-center justify-center mb-4 border border-emerald-500/20">
+              <CheckCircle2 className="text-emerald-500 w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <div className="text-5xl font-black text-white">{profile?.totalWordsLearned || 0}</div>
+            <div className="text-4xl sm:text-5xl font-black text-white">{profile?.totalWordsLearned || 0}</div>
             <div className="text-zinc-500 font-black uppercase text-[10px] tracking-[0.2em] mt-2">Từ đã học</div>
           </Card>
         </div>
@@ -1222,7 +1231,7 @@ function Dashboard({
       </div>
 
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <h3 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
             <History className="w-6 h-6 text-indigo-400" />
             Tiến độ học tập
@@ -1236,7 +1245,7 @@ function Dashboard({
             Biểu đồ chi tiết
           </Button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
           {[
             { label: 'Từ mới', color: 'text-indigo-400' },
             { label: 'Đang học', color: 'text-orange-400' },
@@ -1254,8 +1263,8 @@ function Dashboard({
             const finalCount = i === 0 ? totalWords - Object.keys(progress).length : counts;
 
             return (
-              <Card key={item.label} className="p-6 flex flex-col gap-2 border-zinc-800/50 bg-[#0c0c0e]/50 hover:border-zinc-700 transition-colors">
-                <div className={cn("text-3xl font-black", item.color)}>{finalCount}</div>
+              <Card key={item.label} className="p-4 sm:p-6 flex flex-col gap-2 border-zinc-800/50 bg-[#0c0c0e]/50 hover:border-zinc-700 transition-colors">
+                <div className={cn("text-2xl sm:text-3xl font-black", item.color)}>{finalCount}</div>
                 <div className="text-zinc-500 font-bold text-[10px] uppercase tracking-widest">{item.label}</div>
               </Card>
             );
@@ -1271,7 +1280,7 @@ function Dashboard({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {profile.history.map(session => (
-              <Card key={session.id} className="p-5 flex items-center justify-between border-zinc-800/50 bg-[#0c0c0e]/50 hover:bg-zinc-900 transition-colors">
+              <Card key={session.id} className="p-4 sm:p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-zinc-800/50 bg-[#0c0c0e]/50 hover:bg-zinc-900 transition-colors">
                 <div className="flex items-center gap-4">
                   <div className={cn(
                     "w-12 h-12 rounded-[16px] flex items-center justify-center border",
@@ -1286,7 +1295,7 @@ function Dashboard({
                     <p className="text-zinc-500 text-xs font-semibold mt-0.5">{session.details}</p>
                   </div>
                 </div>
-                <div className="text-right pl-4">
+                <div className="text-left sm:text-right sm:pl-4">
                   {session.score && (
                     <div className="flex flex-col items-end">
                        {session.type === 'quiz' ? (
@@ -1403,23 +1412,23 @@ function Browse({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
         {words.map(w => {
           const p = progress[w.id];
           return (
             <Card key={w.id} className="group hover:border-zinc-700 transition-all border-zinc-800/80 p-0 overflow-hidden flex flex-col bg-[#0c0c0e]">
-              <div className="p-8 space-y-5 flex-grow">
-                <div className="flex justify-between items-start">
+              <div className="p-5 sm:p-8 space-y-5 flex-grow">
+                <div className="flex justify-between items-start gap-3">
                   <div>
-                    <h4 className="text-3xl font-bold tracking-tighter text-white">{w.word}</h4>
+                    <h4 className="text-2xl sm:text-3xl font-bold tracking-tighter text-white break-words">{w.word}</h4>
                     <p className="text-zinc-500 font-mono text-sm mt-1">{w.phonetic}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 shrink-0">
                     <button 
                       onClick={() => onSyncTask(w)}
                       title="Lưu vào Google Tasks"
                       aria-label="Save to Google Tasks"
-                      className="p-3 rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-orange-600 hover:text-white transition-all shadow-lg"
+                      className="p-2.5 sm:p-3 rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-orange-600 hover:text-white transition-all shadow-lg"
                     >
                       <ClipboardList className="w-5 h-5" />
                     </button>
@@ -1427,14 +1436,14 @@ function Browse({
                       onClick={() => speak(w.word)}
                       title="Play pronunciation"
                       aria-label="Play pronunciation"
-                      className="p-3 rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-indigo-600 hover:text-white transition-all shadow-lg"
+                      className="p-2.5 sm:p-3 rounded-2xl bg-zinc-800 text-zinc-400 hover:bg-indigo-600 hover:text-white transition-all shadow-lg"
                     >
                       <Volume2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-bold text-slate-200 text-lg leading-snug">{w.meaning}</p>
+                  <p className="font-bold text-slate-200 text-base sm:text-lg leading-snug">{w.meaning}</p>
                   <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-md inline-block">{w.pos}</span>
                 </div>
                 <div className="pt-5 border-t border-zinc-800/50 space-y-3">
@@ -1474,7 +1483,7 @@ function Browse({
                   {inlineExplanations[w.id] ? "Đóng giải thích" : "AI Explain"}
                 </Button>
               </div>
-              <div className="px-8 py-4 bg-[#09090b] flex justify-between items-center border-t border-zinc-800/50">
+              <div className="px-5 sm:px-8 py-4 bg-[#09090b] flex justify-between items-center border-t border-zinc-800/50">
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Trạng thái</span>
                 <span className={cn(
                   'text-[10px] font-black uppercase tracking-[0.2em]',
@@ -1737,10 +1746,10 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto space-y-12 py-6 text-center"
+        className="max-w-4xl mx-auto space-y-8 sm:space-y-12 py-4 sm:py-6 text-center"
       >
         <div className="space-y-4">
-          <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Chọn chế độ kiểm tra
           </h2>
           <p className="text-zinc-400 max-w-xl mx-auto font-medium">
@@ -1749,7 +1758,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-          <Card onClick={() => startQuiz('standard')} className="p-8 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
+          <Card onClick={() => startQuiz('standard')} className="p-5 sm:p-8 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors border border-emerald-500/20">
               <CheckSquare className="w-8 h-8" />
             </div>
@@ -1759,7 +1768,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
             </div>
           </Card>
           
-          <Card onClick={() => startQuiz('ai')} className="p-8 cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
+          <Card onClick={() => startQuiz('ai')} className="p-5 sm:p-8 cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors border border-indigo-500/20">
               <Sparkles className="w-8 h-8 animate-pulse" />
             </div>
@@ -1860,10 +1869,10 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
   const isAiScenario = !!current.isAi;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8">
       {/* Quiz Progress */}
       <div className="space-y-3">
-        <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">
+        <div className="flex flex-col gap-1 sm:flex-row sm:justify-between text-[10px] sm:text-[11px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-zinc-500">
           <span className="text-indigo-400 font-mono tracking-widest flex items-center gap-2">
             {isAiScenario ? (
               <>
@@ -1889,7 +1898,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
         </div>
       </div>
 
-      <Card className="p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[300px] bg-[#0c0c0e] border-zinc-800 shadow-2xl relative overflow-hidden">
+      <Card className="p-5 sm:p-8 md:p-12 text-center flex flex-col items-center justify-center min-h-[260px] sm:min-h-[300px] bg-[#0c0c0e] border-zinc-800 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-indigo-600" />
         <div className="space-y-6 w-full max-w-2xl mx-auto pt-6">
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400">
@@ -1900,10 +1909,10 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
           </span>
           
           <h2 className={cn(
-            "font-black tracking-tighter text-white whitespace-pre-wrap leading-tight mx-auto flex items-center justify-center gap-4",
+            "font-black tracking-tighter text-white whitespace-pre-wrap leading-tight mx-auto flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 break-words",
             isAiScenario 
-              ? "text-3xl md:text-4xl text-left font-serif" 
-              : (current.type === 'fill' ? "text-3xl md:text-5xl text-center" : "text-6xl text-center")
+              ? "text-2xl sm:text-3xl md:text-4xl text-left font-serif" 
+              : (current.type === 'fill' ? "text-2xl sm:text-3xl md:text-5xl text-center" : "text-4xl sm:text-6xl text-center")
           )}>
             {isAiScenario 
               ? current.questionText 
@@ -1948,7 +1957,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
                   disabled={showAnswer}
                   onClick={() => handleMCQSelect(option)}
                   className={cn(
-                    "p-6 rounded-2xl border-2 text-left transition-all relative group overflow-hidden",
+                  "p-4 sm:p-6 rounded-2xl border-2 text-left transition-all relative group overflow-hidden",
                     btnClass
                   )}
                 >
@@ -1959,7 +1968,7 @@ function QuizSession({ onCancel, onFinish, onWordResult }: { onCancel: () => voi
                     )}>
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="font-bold text-lg">{option}</span>
+                    <span className="font-bold text-base sm:text-lg leading-snug">{option}</span>
                   </div>
                 </button>
               );
@@ -2276,7 +2285,7 @@ function ReviewSession({
   }
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col min-h-[60vh] gap-8">
+     <div className="max-w-2xl mx-auto flex flex-col min-h-[60vh] gap-6 sm:gap-8">
       {/* Progress Bar */}
       <div className="space-y-3">
         <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500">
@@ -2293,7 +2302,7 @@ function ReviewSession({
       </div>
 
       {/* Flashcard */}
-      <div className="flex-grow flex items-center justify-center py-10 perspective-1000">
+      <div className="flex-grow flex items-center justify-center py-4 sm:py-10 perspective-1000">
         <motion.div
            onClick={() => {
              if (!isFlipped && localStorage.getItem('app_sound') !== 'false') {
@@ -2303,19 +2312,19 @@ function ReviewSession({
            }}
            animate={{ rotateY: isFlipped ? 180 : 0 }}
            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-           className="relative w-full max-w-[440px] h-[480px] preserve-3d cursor-pointer shadow-2xl shadow-black/50 rounded-[48px]"
+           className="relative w-full max-w-[440px] h-[min(420px,62vh)] sm:h-[480px] preserve-3d cursor-pointer shadow-2xl shadow-black/50 rounded-[32px] sm:rounded-[48px]"
         >
           {/* Front */}
           <div className={cn(
-            "absolute inset-0 bg-zinc-900 border border-zinc-800 text-white p-12 flex flex-col items-center justify-center text-center backface-hidden rounded-[48px]",
+            "absolute inset-0 bg-zinc-900 border border-zinc-800 text-white p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden rounded-[32px] sm:rounded-[48px]",
             isFlipped ? "opacity-0 pointer-events-none" : "opacity-100"
           )}>
-            <div className="absolute top-10 left-10 flex gap-2">
+            <div className="absolute top-6 left-6 sm:top-10 sm:left-10 flex gap-2">
                <span className="bg-indigo-500/10 text-indigo-400 text-[10px] uppercase tracking-widest font-black px-3 py-1 rounded-full border border-indigo-500/20">VOCABULARY</span>
             </div>
-            <h1 className="text-6xl font-black tracking-tighter mb-4">{currentWord?.word}</h1>
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tighter mb-4 break-words">{currentWord?.word}</h1>
             <div className="flex items-center gap-4 mb-8">
-              <p className="text-xl font-mono text-zinc-500 italic">/{currentWord?.phonetic}/</p>
+              <p className="text-base sm:text-xl font-mono text-zinc-500 italic">/{currentWord?.phonetic}/</p>
               <button 
                 onClick={(e) => speak(e, currentWord?.word)}
                 title="Play pronunciation"
@@ -2332,17 +2341,17 @@ function ReviewSession({
 
           {/* Back */}
           <div className={cn(
-            "absolute inset-0 bg-zinc-900 border border-zinc-800 p-12 flex flex-col items-center justify-center text-center backface-hidden rounded-[48px]",
+            "absolute inset-0 bg-zinc-900 border border-zinc-800 p-6 sm:p-12 flex flex-col items-center justify-center text-center backface-hidden rounded-[32px] sm:rounded-[48px]",
             !isFlipped ? "rotate-y-180 opacity-0 pointer-events-none" : "rotate-y-180 opacity-100"
           )}>
-            <div className="flex-grow flex flex-col items-center justify-center gap-8">
+             <div className="flex-grow flex flex-col items-center justify-center gap-4 sm:gap-8 min-h-0">
                <div className="space-y-3">
-                 <h2 className="text-4xl font-bold tracking-tighter text-white">{currentWord?.meaning}</h2>
+                 <h2 className="text-2xl sm:text-4xl font-bold tracking-tighter text-white leading-tight">{currentWord?.meaning}</h2>
                  <p className="text-indigo-400 font-black uppercase text-[10px] tracking-[0.3em]">{currentWord?.pos}</p>
                </div>
                <div className="h-px w-24 bg-zinc-800" />
-               <div className="space-y-4 px-2">
-                 <p className="text-xl font-medium italic text-slate-300 leading-snug">"{currentWord?.example}"</p>
+               <div className="space-y-3 sm:space-y-4 px-0 sm:px-2 overflow-y-auto">
+                 <p className="text-base sm:text-xl font-medium italic text-slate-300 leading-snug">"{currentWord?.example}"</p>
                  <p className="text-[15px] text-zinc-500 font-medium leading-relaxed">{currentWord?.exampleTranslation}</p>
                  <button 
                   onClick={(e) => {
@@ -2356,7 +2365,7 @@ function ReviewSession({
                </div>
             </div>
             
-            <div className="w-full grid grid-cols-4 gap-3 mt-10">
+            <div className="w-full grid grid-cols-4 gap-2 sm:gap-3 mt-5 sm:mt-10">
               {[
                 { q: 1, label: 'Again', color: 'border-rose-900/50 bg-rose-950/20 text-rose-400 hover:bg-rose-950/40' },
                 { q: 3, label: 'Hard', color: 'border-orange-900/50 bg-orange-950/20 text-orange-400 hover:bg-orange-950/40' },
@@ -2370,7 +2379,7 @@ function ReviewSession({
                     handleRate(btn.q);
                   }}
                   className={cn(
-                    "flex flex-col items-center gap-2 py-4 rounded-2xl transition-all active:scale-95 border",
+                    "flex flex-col items-center gap-2 py-3 sm:py-4 rounded-2xl transition-all active:scale-95 border",
                     btn.color,
                     "font-bold text-[10px] uppercase tracking-tighter shadow-lg"
                   )}
@@ -2518,10 +2527,10 @@ function PracticeSession({
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto space-y-12 mt-10 w-full"
+        className="max-w-4xl mx-auto space-y-8 sm:space-y-12 mt-4 sm:mt-10 w-full"
       >
         <div className="text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter">
             Luyện Chọn Lọc
           </h2>
           <p className="text-zinc-400 max-w-xl mx-auto font-medium">
@@ -2530,7 +2539,7 @@ function PracticeSession({
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card onClick={() => startPractice('easy')} className="p-8 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl">
+          <Card onClick={() => startPractice('easy')} className="p-5 sm:p-8 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors border border-emerald-500/20">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -2540,7 +2549,7 @@ function PracticeSession({
             </div>
           </Card>
           
-          <Card onClick={() => startPractice('medium')} className="p-8 cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl">
+          <Card onClick={() => startPractice('medium')} className="p-5 sm:p-8 cursor-pointer hover:border-indigo-500 hover:bg-indigo-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-indigo-500/10 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors border border-indigo-500/20">
               <Brain className="w-8 h-8" />
             </div>
@@ -2550,7 +2559,7 @@ function PracticeSession({
             </div>
           </Card>
           
-          <Card onClick={() => startPractice('hard')} className="p-8 cursor-pointer hover:border-orange-500 hover:bg-orange-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl">
+          <Card onClick={() => startPractice('hard')} className="p-5 sm:p-8 cursor-pointer hover:border-orange-500 hover:bg-orange-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-orange-500/10 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors border border-orange-500/20">
               <AlertCircle className="w-8 h-8" />
             </div>
@@ -2560,7 +2569,7 @@ function PracticeSession({
             </div>
           </Card>
 
-          <Card onClick={() => startPractice('mistakes')} className="p-8 cursor-pointer hover:border-rose-500 hover:bg-rose-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex items-center gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
+          <Card onClick={() => startPractice('mistakes')} className="p-5 sm:p-8 cursor-pointer hover:border-rose-500 hover:bg-rose-500/5 transition-all border-zinc-800 bg-[#0c0c0e] flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group hover:scale-[1.02] shadow-2xl relative overflow-hidden">
             <div className="w-16 h-16 shrink-0 rounded-[20px] bg-rose-500/10 flex items-center justify-center text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors border border-rose-500/20">
               <Flame className="w-8 h-8 animate-pulse" />
             </div>
@@ -2611,9 +2620,9 @@ function PracticeSession({
         />
       </div>
 
-      <div className="perspective-1000 w-full h-[450px]">
+      <div className="perspective-1000 w-full h-[min(420px,62vh)] sm:h-[450px]">
         <motion.div
-           className="w-full h-[450px] relative cursor-pointer"
+            className="w-full h-full relative cursor-pointer"
            animate={{ rotateY: isFlipped ? 180 : 0 }}
            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
            style={{ transformStyle: 'preserve-3d' }}
@@ -2627,7 +2636,7 @@ function PracticeSession({
           {/* Front */}
           <div 
              className={cn(
-               "absolute inset-0 bg-[#0c0c0e] border border-zinc-800 rounded-[32px] p-10 flex flex-col items-center justify-center text-center shadow-2xl backface-hidden group",
+                "absolute inset-0 bg-[#0c0c0e] border border-zinc-800 rounded-[28px] sm:rounded-[32px] p-6 sm:p-10 flex flex-col items-center justify-center text-center shadow-2xl backface-hidden group",
                isFlipped ? "opacity-0 pointer-events-none" : "opacity-100"
              )}
           >
@@ -2642,7 +2651,7 @@ function PracticeSession({
              <p className="text-[11px] font-black tracking-[0.3em] uppercase text-indigo-500 mb-6 group-hover:scale-105 transition-transform">
                 Practice
              </p>
-             <h2 className="text-6xl sm:text-7xl font-black tracking-tighter text-white mb-6 px-4 py-8">
+              <h2 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter text-white mb-6 px-2 sm:px-4 py-6 sm:py-8 break-words">
                 {currentWord?.word}
              </h2>
              <p className="text-xl font-mono text-zinc-500 opacity-80">/{currentWord?.phonetic}/</p>
@@ -2657,7 +2666,7 @@ function PracticeSession({
           {/* Back */}
            <div 
              className={cn(
-               "absolute inset-0 bg-indigo-600 rounded-[32px] p-10 flex flex-col items-center justify-center text-center shadow-2xl backface-hidden overflow-hidden",
+                "absolute inset-0 bg-indigo-600 rounded-[28px] sm:rounded-[32px] p-5 sm:p-10 flex flex-col items-center justify-center text-center shadow-2xl backface-hidden overflow-hidden",
                !isFlipped ? "opacity-0 pointer-events-none" : "opacity-100"
              )}
              style={{ transform: 'rotateY(180deg)' }}
@@ -2667,11 +2676,11 @@ function PracticeSession({
                 <span className="px-4 py-1.5 rounded-full bg-white/10 text-white text-[10px] font-black uppercase tracking-widest border border-white/20 mb-8 inline-block shadow-lg backdrop-blur-sm">
                   {currentWord?.pos}
                 </span>
-                <h2 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-8 drop-shadow-md">
+                <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-5 sm:mb-8 drop-shadow-md">
                   {currentWord?.meaning}
                 </h2>
-                <div className="space-y-4 bg-white/10 p-6 rounded-2xl border border-white/20 shadow-xl backdrop-blur-sm">
-                  <p className="text-xl font-medium italic text-indigo-50 leading-snug">"{currentWord?.example}"</p>
+                <div className="space-y-3 sm:space-y-4 bg-white/10 p-4 sm:p-6 rounded-2xl border border-white/20 shadow-xl backdrop-blur-sm max-h-44 sm:max-h-none overflow-y-auto">
+                  <p className="text-base sm:text-xl font-medium italic text-indigo-50 leading-snug">"{currentWord?.example}"</p>
                   <p className="text-[15px] text-indigo-200 font-medium leading-relaxed">{currentWord?.exampleTranslation}</p>
                 </div>
               </div>
