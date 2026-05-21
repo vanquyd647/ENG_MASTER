@@ -1,5 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
-
 export interface ApiResult {
   status: number;
   body: unknown;
@@ -25,15 +23,22 @@ const textModels = () =>
 
 const imageModel = () => process.env.GEMINI_IMAGE_MODEL || "imagen-3.0-generate-001";
 
-const createAiClient = () =>
-  new GoogleGenAI({
-    apiKey: getGeminiApiKey() || "missing-api-key",
+const createAiClient = async () => {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error("Missing GEMINI_API_KEY");
+  }
+
+  const { GoogleGenAI } = await import("@google/genai");
+  return new GoogleGenAI({
+    apiKey,
     httpOptions: {
       headers: {
         "User-Agent": "eng-master",
       },
     },
   });
+};
 
 export function checkRateLimit(key: string): ApiResult | null {
   const now = Date.now();
@@ -101,7 +106,7 @@ const normalizeGeminiError = (error: unknown): ApiResult => {
 };
 
 const generateWithFallback = async (options: any) => {
-  const ai = createAiClient();
+  const ai = await createAiClient();
   let lastError: unknown;
 
   for (const model of textModels()) {
@@ -152,7 +157,8 @@ export async function generateAvatar(body: any): Promise<ApiResult> {
       : "A minimal, clean vector avatar for a professional profile, solid bright background, simple geometric shapes";
 
   try {
-    const response = await createAiClient().models.generateImages({
+    const ai = await createAiClient();
+    const response = await ai.models.generateImages({
       model: imageModel(),
       prompt,
       config: {
