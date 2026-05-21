@@ -103,11 +103,14 @@ interface UserProfile {
 
 type ProgressItem = UserProgress[string];
 
-const toStoredProgress = (uid: string, wordId: string, item: ProgressItem) => ({
-  ...item,
-  userId: uid,
-  wordId,
-});
+const toStoredProgress = (uid: string, wordId: string, item: ProgressItem) =>
+  Object.fromEntries(
+    Object.entries({
+      ...item,
+      userId: uid,
+      wordId,
+    }).filter(([, value]) => value !== undefined),
+  ) as ProgressItem & { userId: string; wordId: string };
 
 // --- Components ---
 
