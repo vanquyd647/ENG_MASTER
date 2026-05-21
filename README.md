@@ -35,6 +35,8 @@ Add these environment variables in Vercel Project Settings before deploying:
 - `VITE_FIREBASE_APP_ID`
 - `VITE_FIREBASE_MEASUREMENT_ID`
 
+The app pins Vercel to Node.js `22.x` through `package.json` because the Gemini SDK requires Node 20 or newer.
+
 For Google login, Firebase Authentication must allow the deployed domain:
 
 1. Open Firebase Console for the project used by `VITE_FIREBASE_PROJECT_ID`.

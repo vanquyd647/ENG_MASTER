@@ -69,8 +69,29 @@ const normalizeGeminiError = (error: unknown): ApiResult => {
   if (!getGeminiApiKey()) {
     return { status: 503, body: { error: "AI is not configured.", code: "missing_key" } };
   }
+  if (
+    lower.includes("api key") ||
+    lower.includes("apikey") ||
+    lower.includes("unauthenticated") ||
+    lower.includes("permission_denied") ||
+    lower.includes("forbidden")
+  ) {
+    return {
+      status: 503,
+      body: { error: "AI service key is invalid or not allowed for this deployment.", code: "invalid_key" },
+    };
+  }
   if (lower.includes("quota") || lower.includes("resource_exhausted")) {
     return { status: 429, body: { error: "AI quota is temporarily unavailable.", code: "quota" } };
+  }
+  if (lower.includes("not found") || lower.includes("not_found") || lower.includes("model")) {
+    return {
+      status: 502,
+      body: { error: "The configured AI model is unavailable.", code: "model_unavailable" },
+    };
+  }
+  if (lower.includes("timeout") || lower.includes("deadline") || lower.includes("fetch failed")) {
+    return { status: 504, body: { error: "AI request timed out. Please try again.", code: "ai_timeout" } };
   }
   if (lower.includes("safety")) {
     return { status: 400, body: { error: "AI blocked this request for safety reasons.", code: "safety" } };
