@@ -16,12 +16,12 @@ const rateLimitMax = Number(process.env.API_RATE_LIMIT_MAX || 20);
 const getGeminiApiKey = () => process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY2;
 
 const textModels = () =>
-  (process.env.GEMINI_TEXT_MODELS || "gemini-2.5-flash,gemini-2.0-flash")
+  (process.env.GEMINI_TEXT_MODELS || "gemma-4-31b-it,gemma-4-26b-a4b-it")
     .split(",")
     .map((model) => model.trim())
     .filter(Boolean);
 
-const imageModel = () => process.env.GEMINI_IMAGE_MODEL || "imagen-3.0-generate-001";
+const imageModel = () => process.env.GEMINI_IMAGE_MODEL || "imagen-4.0-generate-001";
 
 const createAiClient = async () => {
   const apiKey = getGeminiApiKey();
